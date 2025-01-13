@@ -9,7 +9,7 @@
    ```
 2. Navigate to the project directory:
    ```
-   cd timeline-visualization
+   cd project1
    ```
 3. Install the required dependencies:
    ```
