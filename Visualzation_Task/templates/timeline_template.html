@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timeline Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
+    <style type="text/css">
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        #visualization, #chartContainer {
+            width: 80%;
+            height: 400px;
+            margin: 20px 0;
+            border: 1px solid lightgray;
+        }
+        #buttons {
+            margin-top: 10px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="visualization"></div>
+    <div class="button-group">
+        <button onclick="downloadTimelineAsPDF()">Download Timeline as PDF</button>
+        <button onclick="downloadTimelineAsJPG()">Download Timeline as JPG</button>
+    </div>
+    <div id="chartContainer">
+        <canvas id="myChart"></canvas>
+    </div>
+    <div class="button-group">
+        <button onclick="downloadChartAsPDF()">Download Chart as PDF</button>
+        <button onclick="downloadChartAsJPG()">Download Chart as JPG</button>
+    </div>
+    <script type="text/javascript">
+        var container = document.getElementById('visualization');
+        var items = [
+            {% for event in events %}
+                {id: {{ event.id }}, content: '{{ event.content }}', start: '{{ event.start }}' {% if event.end %}, end: '{{ event.end }}'{% endif %} },
+            {% endfor %}
+        ];
+        var options = {{ options | safe }};
+        var timeline = new vis.Timeline(container, items, options);
+
+        // Chart.js - Create Bar Chart
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ categories | safe }},
+                datasets: [{
+                    label: 'Dataset Label',
+                    data: {{ values | safe }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)',
+                        'rgba(255, 99, 132, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function downloadTimelineAsPDF() {
+            html2canvas(document.getElementById('visualization'), {
+                onrendered: function(canvas) {
+                    var imgData = canvas.toDataURL('image/png');
+                    var doc = new jsPDF();
+                    doc.addImage(imgData, 'PNG', 10, 10);
+                    doc.save('timeline.pdf');
+                }
+            });
+        }
+
+        function downloadTimelineAsJPG() {
+            html2canvas(document.getElementById('visualization'), {
+                onrendered: function(canvas) {
+                    var imgData = canvas.toDataURL('image/jpeg');
+                    var link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = 'timeline.jpg';
+                    link.click();
+                }
+            });
+        }
+
+        function downloadChartAsPDF() {
+            html2canvas(document.getElementById('chartContainer'), {
+                onrendered: function(canvas) {
+                    var imgData = canvas.toDataURL('image/png');
+                    var doc = new jsPDF();
+                    doc.addImage(imgData, 'PNG', 10, 10);
+                    doc.save('chart.pdf');
+                }
+            });
+        }
+
+        function downloadChartAsJPG() {
+            html2canvas(document.getElementById('chartContainer'), {
+                onrendered: function(canvas) {
+                    var imgData = canvas.toDataURL('image/jpeg');
+                    var link = document.createElement('a');
+                    link.href = imgData;
+                    link.download = 'chart.jpg';
+                    link.click();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
